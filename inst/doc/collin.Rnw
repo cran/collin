@@ -1,0 +1,908 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteEncoding{UTF-8}
+%\VignetteIndexEntry{Using collin to visualize the effects of collinearity in distributed lag models}
+%\VignetteKeywords{distributed lag models, GLM, collinearity}
+%\VignettePackage{collin}
+\documentclass[11pt]{article}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+%\usepackage[a4paper]{geometry}
+\usepackage[left=2.5cm,top=3cm,bottom=3cm,right=2.5cm]{geometry}
+%\usepackage[pdftex]{color,graphicx,epsfig}
+%\usepackage[applemac]{inputenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{booktabs}
+
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=black!20!blue,citecolor=black!25!green,urlcolor=black!15!blue]{hyperref}
+\usepackage{url}
+%\usepackage{rotating}  % sidewaystable
+\usepackage{gensymb}  % \degree
+
+
+
+%\usepackage[square,comma,sort&compress,numbers]{natbib}
+% https://www.overleaf.com/learn/latex/Natbib_citation_styles
+%Import the natbib package and sets a bibliography  and citation styles
+%\usepackage[square,comma,sort&compress]{natbib}
+\usepackage[super,square,comma,sort&compress,numbers]{natbib}
+
+
+%\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+%\setcitestyle{authoryear,open={(},close={)}}
+
+%\usepackage[nottoc,numbib]{tocbibind} % For bibliography in the table of contents
+\usepackage[nottoc]{tocbibind} % For bibliography in the table of contents but no "Chapter" label inside
+
+
+\usepackage{authblk}  % authors and affiliations
+
+%%% Begin captions format:
+%\usepackage[font=sf, labelfont=bf, labelsep=period, position=top]{caption}
+%\usepackage[footnotesize, labelfont=bf, labelsep=period, position=top]{caption}
+\usepackage[hang,footnotesize,bf]{caption}
+\setlength{\captionmargin}{70pt}  % margins
+%%% End captions format:
+
+\newcommand{\Robject}[1]{\texttt{#1}}
+\newcommand{\Rfunction}[1]{{\small\texttt{#1}}}
+\newcommand{\Rpkg}[1]{\textsf{#1}}
+\newcommand{\Rclass}[1]{\textit{#1}}
+\newcommand{\Rdata}[1]{{\texttt{#1}}}
+\newcommand{\R}{\textsf{R}}
+\newcommand{\Rmethod}[1]{{\texttt{#1()}}}
+\newcommand{\Rarg}[1]{{\texttt{#1}}}
+\newcommand{\collin}{\textsf{collin}}
+%\DeclareGraphicsRule{.pdftex}{pdf}{.pdftex}{}
+
+
+
+\newcommand{\PM}{{PM\textsubscript{2.5}}}
+\newcommand{\PMten}{{PM\textsubscript{10}}}
+\newcommand{\NO}{{NO\textsubscript{2}}}
+\newcommand{\microgm}{{$\mu$g/m\textsuperscript{3}}}
+
+
+\title{Using the \R\ package \collin\ to visualize the effects of collinearity in distributed lag models\\
+\vspace{4mm}
+\small{(\collin\ version \Sexpr{utils::packageDescription("collin")$Version})}}
+\author[1,2,3]{Jose Barrera-G\'omez\thanks{jose.barrera@isglobal.org}}
+\author[1,2,3]{Xavier Basaga\~na\thanks{xavier.basagana@isglobal.org}}
+\affil[1]{ISGlobal}
+\affil[2]{Universitat Pompeu Fabra (UPF)}
+\affil[3]{CIBER Epidemiolog\'ia y Salud P\'ublica (CIBERESP)}
+
+\renewcommand\Authands{ and }
+\renewcommand\Affilfont{\itshape\small}
+
+
+\begin{document}
+
+<<options, include=F>>=
+library(knitr)
+library(xtable)
+#options(width = 120)
+#options(scipen = 999, warnings = FALSE) # to avoid scientic notatino in knitr outputs
+options(scipen = 999) # to avoid scientic notatino in knitr outputs
+opts_chunk$set(size = 'small')
+opar <- par()         # make a copy of current par settings
+@
+
+\maketitle
+
+\tableofcontents
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%%   1. Introduction
+%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+This document is a user's guide for the \R\footnote{\R\ is a free and open source software and it is available at CRAN (\url{http://cran.r-project.org/}).} package \collin\ for the visualization of the effects of collinearity in distributed lag models (DLNM). The package usage is based on two elements provided by the user: a model including a \Robject{crossbasis} created with the \Rpkg{dlnm} (\url{https://cran.r-project.org/web/packages/dlnm/}), and a set of hypothesized true effects. Then, \collin\ performs a simulation study and provides a visualization of results to assess whether the actual results of the study could be driven by collinearity, as described in the original work by \citet{Basaganacollin2020}. The illustrative examples used there are reproduced here.
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%%   2. Getting started
+%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Getting started}
+The last version released on CRAN can be installed directly within an \R\ session by:
+<<echo=T, eval=F>>=
+install.packages("collin")
+@
+
+A brief overview of the package is obtained by:
+<<echo=T>>=
+library(collin)
+@
+<<eval=F>>=
+help(package = "collin")
+@
+
+Once the package has been installed, the vignettes, including the most recent version of this document, as well as the corresponding \R\ code, are available through
+<<eval=F>>=
+browseVignettes("collin")
+@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%%   3.  How does the package work?
+%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{How does the package work?}
+\label{sec:collin}
+The package works in a two-step procedure.\\
+
+In the first step, the \Rfunction{collindlnm} function is used to simulate results from a DLNM created with the \Rpkg{dlnm} package\cite{Gasparrini2011} and a hypothetical effect pattern, both provided by the user. The main arguments of the \Rfunction{collindlnm} function are:
+
+\begin{itemize}
+\item \Rarg{model}: the fitted DLNM, which includes a crossbasis, to be evaluated. Currently, models allowed are those of class \Rclass{glm} (i.e. a generalized linear model) or \Rclass{lme} (i.e. a linear mixed effects model).
+
+\item \Rarg{x}: a matrix or a vector, depending on whether the hypothetical effect to be explored is linear or non-linear, including the values of the predictor under study.
+
+\item \Rarg{cb}: an object of class \Rclass{crossbasis}, included in the model under study (\Rarg{model}).
+
+\item \Rarg{at}: the increase(s) in the predictor under study to be considered to report the effects of the variable. If the hypothetical effect to be analyzed is linear, then it must be a single number. If the hypothetical effect to be analyzed is non-linear, it must be a vector with at least two different values, in order to approximate the shape of the effect.
+
+\item \Rarg{cen}: the reference value of the predictor of interest, used to calculate effects. If the effect is linear, the value of \Rarg{cen} is irrelevant (and it is internally set to 0).
+
+\item \Rarg{effect}: if the effect is linear, a vector of length (maximum(lag) + 1) including the linear effect at each lag. If the effect is non-linear, a matrix including the effect at each lag (columns) for each value provided in \Rarg{at} (rows).
+
+\item \Rarg{type}: if \Rarg{type = "coef"} (default), the hypothetical effect is supposed to be in the linear predictor scale (i.e. it is considered as values of regression coefficient in \Rarg{model}). If \Rarg{type = "risk"}, the effect is supposed to be in terms of relative risks (i.e. exp(\Rarg{coef}), as ORs or RRs in logistic or Poisson families, respectively). If \Rarg{model} is of class \Rclass{lme}, then it must be \Rarg{type = "coef"} (default).
+
+\item \Rarg{shape}: the shape of the relationship between the linear predictor and the outcome. Default is, \Rarg{"linear"}. The case \Rarg{shape = "nonlinear"} is currently implemented only if \Rarg{model} is of class \Rclass{glm}.
+
+\item \Rarg{nsim}: the number of simulations. Default is 100.
+
+\item \Rarg{seed}: the seed for reproducibility of results. Default is \Rarg{seed = NULL} (no seed).
+
+\end{itemize}
+
+In the second step, a visualization of the simulation study is displayed using the specific \Rmethod{plot} method, which allows to assessing whether the results of the original fitted model are compatible with collinearity problems observed when considering the alternative hypothetical effect pattern. The arguments for \Rmethod{plot} depend on the hypothetical effect pattern being linear or non-linear.\\
+
+For the case of a linear effect, the \Rmethod{plot} method requires only two arguments:
+\begin{itemize}
+\item \Rarg{x}: a result of the \Rfunction{collindlnm}.
+\item \Rarg{lags}: indicator of the lags where the results are displayed. Default is \Rarg{lags = NULL}, in which case all lags are displayed.
+\end{itemize}
+
+For the case of a non-linear effect, the \Rmethod{plot} method requires three additional arguments to allow the user to set how the plots associated at each value of \Rarg{at} are shown:
+\begin{itemize}
+\item \Rarg{show}: default option, \Rarg{show = "manual"}, requires the user to manually set the numbers of rows and columns to arrange the plots in a single array of plot, using the \Rarg{par} function and setting the value of \Rarg{mfrow}. This is the most flexible option to arrange the visualization in a document. The option \Rarg{show = "auto"} is the same than \Rarg{show = "manual"} except that the value of \Rarg{mfrow} is automatically set by the package. The option \Rarg{show = "sequence"} shows the plots sequentially, waiting for the user's input before moving to the next plot.
+\item \Rarg{addlegend} and \Rarg{varlegend}: to add a label indicating, in each plot, the name of the predictor under analysis and the value of \Rarg{at}.
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%%   4. Illustrative examples
+%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Illustrative examples}
+For further details on the following illustrative examples, see the original work\cite{Basaganacollin2020}. Datasets \Rdata{mempm25} and \Rdata{rhospno2}, included in the \Rpkg{collin} package and used in sections \ref{sec:mempm25} and \ref{sec:rhospno2} of this document, are synthetic datasets generated with the \R\ package \Rpkg{synthpop}\footnote{\url{https://cran.r-project.org/web/packages/synthpop/index.html}}, based on real datasets used in the original work\cite{Basaganacollin2020}. Hence, results shown in this document can (and should) differ from the original results.\\
+
+<<nsim, echo=FALSE>>=
+mynsim <- 50     # number of simulations
+@
+
+First, we set the number of simulations and the seed that will be applied to all examples. We set the number of simulations $\Robject{mynsim} = \Sexpr{mynsim}$ to reduce the computation time needed to reproduce all examples in this vignette. However, in a particular study, the number of simulations can be increased (for instance, to the default value 100).
+<<nsimseed>>=
+<<nsim>>
+myseed <- 23984  # seed
+@
+
+Additional packages required for the examples are:
+<<lib>>=
+library(nlme)     # lme
+library(dlnm)
+library(splines)  # ns
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%%   4.1. Example 1: Windows of susceptibility in a cohort study
+%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Example 1: Windows of susceptibility in a cohort study}
+\label{sec:mempm25}
+Here, we used data from a study by \citet{Rivas2019}, which aimed to estimate the association between air pollution exposure (\PM, in \microgm) during the prenatal period and the first seven postnatal years on working memory tests taken at age 8 in a cohort of \Sexpr{length(unique(mempm25$id))} children. Exposure matrix contains the exposure to \PM\ at pregnancy, and from years 1 to 7.
+
+<<corpm25>>=
+# data summary:
+summary(mempm25)
+
+# exposure with lags matrix:
+pm25lags <- 0:7
+nlagspm25 <- length(pm25lags)
+E <- paste0("pm25y", pm25lags)
+Qpm25 <- as.matrix(mempm25[, E])
+
+# exposure pairwise correlations:
+corQpm25 <- cor(Qpm25, use = "complete.obs")
+rownames(corQpm25) <- colnames(corQpm25) <- E
+@
+
+<<printcorQpm25, eval=FALSE>>=
+print(corQpm25, digits = 3)
+@
+
+<<printcorQpm25fancy, results="asis", echo=FALSE>>=
+xtab <- xtable(corQpm25,
+               caption = "Correlation between \\PM\\ concentrations at different lags.",
+               label = "tab:corQpm25")
+names(xtab) <- paste("Year", pm25lags)
+names(xtab)[1] <- "Pregnancy"
+rownames(xtab) <- names(xtab)
+print(xtab, size = 'footnotesize', booktabs = TRUE)
+rm(xtab)
+@
+
+The correlation between exposure to \PM\ at different periods, shown in Table \ref{tab:corQpm25} is high, with \Sexpr{round(100 * mean(corQpm25[lower.tri(corQpm25)] > 0.9))}\% of values exceeding 0.9. Children took the working memory tests in four repeated occasions throughout a year and children were nested in schools, so a 3-level mixed effects model framework was used. We used the distributed lag nonlinear model framework to model the effect of \PM. We reproduced the original analyses by considering a linear effect of \PM\ and restricting the lagged effects with a quadratic $b$-spline with two equally-spaced internal knots. The model was further adjusted for age, sex, maternal education and residential neighborhood socioeconomic status. First, we start with the estimation from single-lag models.
+
+<<fitsinglelagmempm25, cache=TRUE>>=
+# set the exposure increase:
+pm25change <- 10
+
+# data.frame to store effects and CI:
+pm25effects <- data.frame(lower = rep(NA, nlagspm25),
+                          estimate = rep(NA, nlagspm25),
+                          upper = rep(NA, nlagspm25))
+
+# fit models:
+for (i in 1:nlagspm25) {
+  # select exposure lag:
+  Ei <- Qpm25[, i]
+  # fit model for that single lag:
+  modi <- lme(wmemo ~ Ei + sex + agecen + educ + resses,
+              data = mempm25,
+              weights = ~ wei,
+              random = ~ 1|school/id,
+              na.action = na.omit,
+              control = lmeControl(opt = "optim"))
+  # get effect estimate (for Echange units increase):
+  pm25effects[i, ] <- pm25change * intervals(modi)$fixed["Ei", ]
+}
+rm(Ei, modi)
+@
+
+A graphical representation of the effects under single-lag models is shown in Figure \ref{fig:singlelagmempm25}, which has been generated with the following code:
+
+<<plotsinglelagmempm25, eval=FALSE>>=
+par(las = 1)
+xvalues <- 0:(nlagspm25 - 1)
+with(pm25effects,
+     plot(xvalues, estimate, ylim = range(pm25effects), pch = 19,
+          xlab = "Year", ylab = "Change in mean working memory"))
+with(pm25effects, segments(xvalues, lower, xvalues, upper))
+abline(h = 0, lty = 2)
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsinglelagmempm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align= 'center', echo = F>>=
+<<plotsinglelagmempm25>>
+@
+\caption{Estimated effect and 95\% confidence intervals of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure in working memory score across the different time periods, obtained from single-lag models.}
+\label{fig:singlelagmempm25}
+\end{center}
+\end{figure}
+
+According to Figure \ref{fig:singlelagmempm25}, models including only \PM\ from a single period showed negative associations between \PM\ and working memory across all periods. Now, we fit the distributed lag model:
+
+<<fitdlnmmempm25>>=
+# create crossbasis:
+df <- 5
+ekn <- equalknots(x = c(0, nlagspm25 - 1),
+                  nk = NULL,
+                  fun = "bs",
+                  df = df,
+                  degree = 2,
+                  intercept = TRUE)
+cbpm25 <- crossbasis(x = Qpm25,
+                     lag = c(0, nlagspm25 - 1),
+                     argvar = list(fun = "lin"),
+                     arglag = list(fun = "bs", degree = 2, df = df, knots = ekn))
+
+# fit model:
+modmempm25 <- lme(wmemo ~ cbpm25 + sex + agecen + educ + resses,
+                  data = mempm25,
+                  weights = ~ wei,
+                  random = ~ 1|school/id,
+                  na.action = na.exclude,
+                  control = lmeControl(opt = "optim"))
+
+# predict effects at different lags
+predmempm25 <- crosspred(basis = cbpm25, model = modmempm25, cen = 0, at = pm25change)
+@
+
+A graphical representation of the effects under the previous distributed lag model is shown in Figure \ref{fig:dlnmmempm25}, which has been generated with the following code:
+
+<<plotdlnmmempm25, eval=FALSE>>=
+par(las = 1)
+plot(predmempm25, var = pm25change, xlim = c(0, nlagspm25 - 1), main = "",
+     xlab = "Year", ylab = "Change in mean working memory")
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotdlnmmempm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align= 'center', echo = F>>=
+<<plotdlnmmempm25>>
+@
+\caption{Estimated effect and 95\% confidence intervals of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure in working memory score across the different time periods, obtained from a distributed lag model.}
+\label{fig:dlnmmempm25}
+\end{center}
+\end{figure}
+
+According to Figure \ref{fig:dlnmmempm25}, the distributed lag model estimates strong opposing effects. Next, we will check if collinearity is a potential explanation for these results. We first try if the obtained pattern is consistent with a constant effect that has the same cumulative effect than the one obtained. The cumulative effect estimated by the fitted model is stored in the object \Robject{allfit} within the output \Robject{predmempm25}, which was obtained using the \Rfunction{crosspred} function above. We just need to divide that cumulative effect by the number of lags and use it as the common hypothetical effect at all lags:
+
+<<setsimmempm25conseff>>=
+# constant effect (divide cumulative by number of lags):
+(conseffpm25 <- rep(predmempm25$allfit / nlagspm25, nlagspm25))
+@
+
+Now we will pass the hypothetical effect to the \Rfunction{collindlnm} function. Since \Rfunction{crosspred} above was applied to a linear model (specifically, of class \Rclass{lme}), the results of the \Rfunction{crosspred} function are expressed in terms of the regression coefficients of the model. Hence, we need to use \Rfunction{collindlnm} with \Robject{type = "coef"}, which is the default option, so we don't need to specify it. Also, we don't need to set the argument \Rarg{shape} because in this case the hypothetical effect is linear, which is the default option for \Rarg{shape}. Hence, the first step of the procedure is:
+
+<<simmempm25conseff, cache=TRUE>>=
+simconseffpm25 <- collindlnm(model = modmempm25,    # the original fitted model
+                             x = Qpm25,             # matrix with PM2.5 values at each lag
+                             cb = cbpm25,           # the crossbasis included in the model
+                             at = pm25change,       # increase in PM2.5 to compute effects
+                             effect = conseffpm25,  # hypothetical effect
+                             nsim = mynsim,
+                             seed = myseed)
+@
+
+The second step of the procedure uses the \Rmethod{plot} method to visualize the results, as shown in Figure \ref{fig:simconseffpm25} using the following call to the \Rmethod{plot} method:
+
+<<plotsimconseffpm25, eval=FALSE>>=
+par(las = 1)
+plot(simconseffpm25, xlab = "Year", ylab = "Change in mean working memory")
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsimconseffpm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align= 'center', echo = F>>=
+<<plotsimconseffpm25>>
+@
+\caption{Estimated effect of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure across the different time periods over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The red thick line represents the effects observed in the real dataset (i.e. original fitted model). Results obtained when simulating a constant effect across all lags, with the cumulative effect being equal to the estimated using the real data.}
+\label{fig:simconseffpm25}
+\end{center}
+\end{figure}
+
+According to Figure \ref{fig:simconseffpm25}, the observed pattern is not consistent with a constant effect at all lags, with the same cumulative effect. We try now another pattern, one in which \PM\ only has a (negative) effect at lag 5, and has no effect on the other lags. The effect is four times the observed cumulative effect:
+<<setsimmempm25lag5>>=
+lag5seffpm25 <- rep(0, nlagspm25)
+lag5seffpm25[6] <- 4 * predmempm25$allfit
+round(lag5seffpm25, 2)
+@
+
+New simulations under that hypothetical effect:
+
+<<simmempm25lag5, cache=TRUE>>=
+simlag5effpm25 <- collindlnm(model = modmempm25,
+                             x = Qpm25,
+                             cb = cbpm25,
+                             at = pm25change,
+                             effect = lag5seffpm25,
+                             nsim = mynsim,
+                             seed = myseed)
+@
+
+And the results, shown in Figure \ref{fig:simlag5effpm25}, are obtained using the \Rmethod{plot} method:
+<<plotsimlag5effpm25, eval=FALSE>>=
+par(las = 1)
+plot(simlag5effpm25, xlab = "Year", ylab = "Change in mean working memory")
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsimlag5effpm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
+<<plotsimlag5effpm25>>
+@
+\caption{Estimated effect of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure across the different time periods over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The red thick line represents the effects observed in the real dataset (i.e. original fitted model). Results obtained when simulating a real effect of year 5 (four times the size of the cumulative effect estimated by the original model) and no effect of all other periods.}
+\label{fig:simlag5effpm25}
+\end{center}
+\end{figure}
+
+According to Figure \ref{fig:simlag5effpm25}, the estimated effect pattern using the real data is relatively similar to the one that would be obtained under a truth in which only year 5 has an effect. Under that scenario, due to the correlation between exposure at different times (collinearity) and to the specific choice to constraint lagged associations, most replications of the study would report non-existent negative effects at lags 1 and 6 and positive effects at lags 3 and 4. In a scenario like that, with a single period having an effect, constraining lagged effects with a spline function would not be a good choice, as it imposes smooth changes across lags. In reality, however, no one knows the true data generating mechanism, which makes the choice of the appropriate lag function difficult.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%%   4.2. Example 2: Time series study with linear effects
+%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Example 2: Time series study with linear effects}
+\label{sec:rhospno2}
+In this example, we analyzed the relationship between the daily number of hospital admissions for respiratory causes and ambient \NO\ concentrations (in \microgm) in the city of Barcelona (Spain) for years \Sexpr{paste(range(rhospno2$year), collapse = "-")}:
+
+<<rhospno2>>=
+summary(rhospno2)
+@
+
+We used the DLNM framework with a generalized linear model with the quasi-Poisson family to allow for overdispersion. In particular, we assumed the effect of \NO\ to be linear (in the log scale), explored lagged effects of up to 14 days, and constrained the lag function to follow a natural spline with three internal knots equally-spaced in the log scale. The model was further adjusted for day of the week, temperature (using a crossbasis with a natural spline with 4 equally-spaced internal knots to model the non-linear effects of temperature, and a natural spline with 3 internal knots equally-spaced on the log scale to model the lag structure up to lag 21), and for trend and seasonality (using a natural spline of time with 7 degrees of freedom per year).\\
+
+First, we need to create the matrix of the lagged values of the exposure, which can be done using the \Rfunction{lagpad} function. This function has two arguments: \Rarg{x}, the numeric vector to be lagged, and \Rarg{k}, the number of lags to be applied:
+
+<<corrrhospno2>>=
+# create matrix with lagged data:
+nlagsno2 <- 15  # number of lags considered (14 + 1)
+
+Qno2 <- matrix(NA, nrow = dim(rhospno2)[1], ncol = nlagsno2)
+for (i in 1:nlagsno2)
+  Qno2[, i] <- lagpad(x = rhospno2$no2, k = i - 1)
+
+# correlation betweeen exposures:
+corQno2 <- cor(Qno2, use = "complete.obs")
+rownames(corQno2) <- colnames(corQno2) <- paste0("lag", 0:(nlagsno2 - 1))
+@
+
+<<printcorQno2, eval=FALSE>>=
+print(corQno2, digits = 2)
+@
+
+<<printcorQno2fancy, results="asis", echo=FALSE>>=
+xtab <- xtable(corQno2,
+               caption = "Correlation between \\NO\\ concentrations at different lags.",
+               label = "tab:corQno2")
+names(xtab) <- paste0("-", 0:(nlagsno2 - 1), " d.")
+names(xtab)[1] <- "Given day"
+rownames(xtab) <- names(xtab)
+print(xtab, size = 'tiny', booktabs = TRUE)
+rm(xtab)
+@
+
+The correlation between \NO\ concentrations at different lags, shown in Table \ref{tab:corQno2}, were lower than in the previous example (Table \ref{tab:corQpm25}), with highest values around \Sexpr{round(corQno2[1, 2], 1)} for adjacent days.\\
+
+Now, we start the modelling with the estimates when including single lags in the model:
+
+<<fitsinglelagrhosppm25, cache=TRUE>>=
+# crossbasis for temperature
+
+# Fixing the knots at equally spaced values of temperature and at equally spaced
+# log-values of lag. From:
+# https://github.com/gasparrini/2010_gasparrini_StatMed_Rcode/blob/master/Rcode.R
+
+ktemp <- equalknots(rhospno2$temp, nk = 4)
+nlagstemp <- 22  # maximum lag for temperature + 1
+klag <- logknots(nlagstemp - 1, nk = 3)
+
+cbtemp <- crossbasis(x = rhospno2$temp,
+                     argvar = list(knots = ktemp),
+                     arglag = list(knots = klag),
+                     lag = nlagstemp - 1)
+
+# number of years for the time spline:
+nyears <- diff(range(rhospno2$year)) + 1
+
+# get beta coefficients and CI for each model:
+coefsno2single <- data.frame(estimate = rep(NA, nlagsno2),
+                             lower = rep(NA, nlagsno2),
+                             upper = rep(NA, nlagsno2))
+
+for (i in 1:nlagsno2) {
+  # select exposure lag:
+  Ei <- Qno2[, i]
+  # fit model:
+  modi <- glm(hresp ~ Ei + cbtemp + ns(t, 7 * nyears) + dow,
+              data = rhospno2,
+              family = quasipoisson,
+              na.action = na.exclude)
+  # get beta estimates and CI:
+  ints <- confint.default(modi)
+  coefsno2single$lower[i] <- ints["Ei", "2.5 %"]
+  coefsno2single$estimate[i] <- summary(modi)$coefficients["Ei", "Estimate"]
+  coefsno2single$upper[i] <- ints["Ei", "97.5 %"]
+}
+
+# set the exposure increase:
+no2change <- 10
+
+# compute effects (RRs):
+effectno2single <- exp(no2change * coefsno2single)
+@
+
+A graphical representation of the effects under single-lag models is shown in Figure \ref{fig:singlelagrhospno2}, which has been generated with the following code:
+
+<<plotsinglelagrhospno2, eval=FALSE>>=
+par(las = 1)
+xvalues <- 0:(nlagsno2 - 1)
+with(effectno2single,
+     plot(xvalues, estimate, ylim = range(effectno2single), pch = 19, xlab = "Lag", ylab = "RR"))
+with(effectno2single, segments(xvalues, lower, xvalues, upper))
+abline(h = 1, lty = 2)
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsinglelagrhospno2b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align= 'center', echo = F>>=
+<<plotsinglelagrhospno2>>
+@
+\caption{Estimated relative risk (RR) and 95\% confidence intervals of hospital admission for respiratory causes for a \Sexpr{no2change} \microgm\  increase in ambient \NO\ concentration across the different time periods, obtained from single-lag models.}
+\label{fig:singlelagrhospno2}
+\end{center}
+\end{figure}
+
+According to Figure \ref{fig:singlelagrhospno2}, single-lag models showed significant increases in risk of respiratory hospital admission (i.e. relative risk, $\text{RR} > 1$) at lags 0 and 6, other periods with elevated non-significant RRs, and a non-significant $\text{RR} < 1$ at lags 1 and 2. Now, we fit the distributed lag model to the data:
+
+<<cbno2>>=
+# crossbasis for NO2 (linear effect):
+lagknots <- logknots(nlagsno2 - 1, nk = 3)
+cbno2 <- crossbasis(x = rhospno2$no2,
+                    lag = c(0, (nlagsno2 - 1)),
+                    argvar = list(fun = "lin"),
+                    arglag = list(fun = "ns", knots = lagknots))
+@
+
+In this case in which we are going to include two crossbases in the model that will be passed to \Rfunction{collindlnm}, it gives problems because of the names:
+
+<<cbnames>>=
+colnames(cbtemp)
+colnames(cbno2)
+all(colnames(cbno2) %in% colnames(cbtemp))
+@
+
+To solve it, we need to change the names of one of the crossbasis:
+
+<<cbtempnames>>=
+# change the names of the crossbassis for temperature:
+aux <- as.data.frame(cbtemp)
+ncbtemp <- dim(cbtemp)[2]
+crosstempnames <- paste0("crosstemp", 1:ncbtemp)
+names(aux) <- crosstempnames
+rhospno2 <- cbind(rhospno2, aux)
+rm(aux)
+names(rhospno2)
+@
+
+Now we can fit the model with the two crossbases:
+
+<<fitdlnmrhospno2>>=
+# model formula:
+formhosp <- paste0("hresp ~ cbno2 + ",
+                   paste(crosstempnames, collapse = " + "),
+                   " + ns(t, 7 * nyears) + dow")
+(formhosp <- as.formula(formhosp))
+
+# fit model:
+modrhospno2 <- glm(formhosp, family = quasipoisson, na.action = na.exclude, data = rhospno2)
+
+# predict effects at different lags:
+predrhospno2 <- crosspred(basis = cbno2, model = modrhospno2, cen = 0, at = no2change)
+@
+
+A graphical representation of the effects under the previous distributed lag model is shown in Figure \ref{fig:dlnmrhospno2}, which has been generated with the following code:
+
+<<plotdlnmrhospno2, eval=FALSE>>=
+par(las = 1)
+plot(predrhospno2, var = no2change, xlim = c(0, nlagsno2 - 1), main = "", xlab = "Day",
+     ylab = "RR of hospital admission")
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotdlnmrhospno2b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align= 'center', echo = F>>=
+<<plotdlnmrhospno2>>
+@
+\caption{Estimated relative risk (RR) and 95\% confidence intervals of hospital admission for respiratory causes for a \Sexpr{no2change} \microgm\ increase in ambient \NO\ concentration across the different time periods, obtained from a distributed lag model.}
+\label{fig:dlnmrhospno2}
+\end{center}
+\end{figure}
+
+According to Figure \ref{fig:dlnmrhospno2}, when fitting the distributed lag model, there was a statistically significant increase in respiratory hospital admissions associated with levels of \NO\ at lag 0, followed by a statistically significant decreased risk at lags 1 and 2, and a subsequent statistically significant increase around lag 5. The decrease in risk at lags 1 and 2 could be consistent with the harvesting or short-term mortality displacement phenomenon (details in the original work\cite{Basaganacollin2020}). However, there is also the possibility that this decrease in risk and the subsequent increases around lag 5 could be explained by collinearity since, as we showed above, collinearity can induce estimates with opposing signs. To explore its plausibility, we will analyze a hypothetical truth in which the real effect exists only at lag 0, with the same size as the estimated by the fitted model.\\
+
+
+<<setsimrhospno2lag0>>=
+# Effect (RRs) only at lags 0, same as observed
+RRveclag0 <- rep(1, nlagsno2)
+RRveclag0[1] <- predrhospno2$matRRfit[, "lag0"]
+RRveclag0
+@
+
+Now we pass the hypothetical effect to \Rfunction{collindlnm}. Since it is given as RRs, we need to set \Robject{type = "risk"}:
+
+<<simrhospno2lag0, cache=TRUE>>=
+simlag0effno2 <- collindlnm(model = modrhospno2,
+                            x = Qno2,
+                            cb = cbno2,
+                            at = no2change,
+                            effect = RRveclag0,
+                            type = "risk",
+                            nsim = mynsim,
+                            seed = myseed)
+@
+
+The results, shown in Figure \ref{fig:simlag0effno2}, are obtained using the \Rmethod{plot} method:
+<<plotsimlag0effno2, eval=FALSE>>=
+par(las = 1)
+plot(simlag0effno2, xlab = "Day", ylab = "RR of hospital admission")
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsimlag0effno2b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
+<<plotsimlag0effno2>>
+@
+\caption{Estimated relative risk (RR) of hospital admission for respiratory cause for a \Sexpr{no2change} \microgm\ increase in ambient \NO\ concentration across different lags, obtained from a distributed lag model, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The results were obtained when simulating an effect only at lag 0 and of the same magnitude as the estimated with the real data. The red thick line represents the RRs estimated with the real dataset.}
+\label{fig:simlag0effno2}
+\end{center}
+\end{figure}
+
+Results displayed in Figure \ref{fig:simlag0effno2} show that, under a hypothetical truth in which only lag 0 has a real effect, the pattern of the estimated effects bear some similarity to those obtained with the real data (red line), so that collinearity could be involved in these results. I.e. even under the situation in which only lag 0 has a real effect, distributed lag models can suggest a reduction in risk at lags 1-2 and subsequent increases in risk around lag 5. It is important to note that the observed pattern is compatible with many real scenarios, and in particular it is also compatible with a scenario with a real increase in risk at lag 0 and a real decrease in risk at lag 2 (e.g. because of the harvesting phenomenon) (details in the original work\cite{Basaganacollin2020}).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%
+%%%   4.3. Example 3: Time series study with nonlinear effects
+%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Example 3: Time series study with nonlinear effects}
+\label{sec:ts}
+In this example, we analyzed the relationship between daily mortality and ambient temperature in Chicago from 1987 to 2000. These data are available as part of the \R\ package \Rpkg{dlnm}:
+
+<<chicago>>=
+chica <- chicagoNMMAPS[, c("date", "time", "year", "dow", "death", "temp", "pm10")]
+summary(chica)
+@
+
+First, we calculate the matrix of lagged values of temperature:
+
+<<corQtemp>>=
+# create matrix with lagged data:
+nlagstemp <- 31  # number of lags considered (30 + 1)
+
+Qtemp <- matrix(NA, nrow = dim(chica)[1], ncol = nlagstemp)
+for (i in 1:nlagstemp) {
+  Qtemp[, i] <- lagpad(x = chica$temp, k = i - 1)
+}
+colnames(Qtemp) <- paste0("lag", 0:(nlagstemp - 1))
+
+# correlation betweeen exposures
+corQtemp <- cor(Qtemp, use = "complete.obs")
+rownames(corQtemp) <- colnames(corQtemp) <- paste0("lag", 0:(nlagstemp - 1))
+@
+
+The correlation between temperature in two consecutive days is \Sexpr{round(corQtemp[1, 2], 2)}, the correlation is still greater than 0.8 for days separated by 8 days or less, and it is around 0.7 for a \Sexpr{(nlagstemp - 1)}-day separation. We used the distributed lag nonlinear model framework, with the same specifications used in the vignette of the \Rpkg{dlnm} package, to model the association between mortality and temperature.\citep{Gasparrini2011} Namely, we used a crossbasis for temperature, using a quadratic $b$-spline with 3 equally-spaced internal knots to model the exposure-response association, and a natural spline with 3 equally-spaced internal knots in the log space to model the lagged association up to lag \Sexpr{(nlagstemp - 1)}. The quasi-Poisson regression model included as additional covariates day of the week, \PMten\ concentrations (modeled with a crossbasis assuming linear effects and a strata lag structure up to lag 1), and a control for trends and seasonality with a natural spline of time with 7 degrees of freedom per year.\\
+
+First, we create the crossbasis for \PMten:
+
+<<<cbpm10>>=
+# crossbasis for PM10:
+cbpm10 <- crossbasis(x = chica$pm10,
+                     lag = 1,
+                     argvar = list(fun = "lin"),
+                     arglag = list(fun = "strata"))
+
+# problems with models with 2 crossbases because of names. Rename:
+chica$baspm <- cbpm10
+rm(cbpm10)
+@
+
+Now, we start the modelling with the estimates when including single lags in the model:
+
+<<fitsinglelagchica, cache=TRUE>>=
+# reference value of temperature for effects calculation:
+centemp <- 21
+
+# evaluation points (values of temperature):
+attemp <- c(-20, 0, 33)
+
+# get beta coefficients and CI for each model:
+coefs <- lower <- upper <- matrix(NA, nrow = dim(Qtemp)[2], ncol = length(attemp))
+
+# number of years for time spline:
+nyearschica <- diff(range(chica$year, na.rm = TRUE)) + 1
+
+
+for (i in 1:nlagstemp) {
+  Ei <- Qtemp[, i]
+  # crossbasis for lag i of temperature:
+  cbi <- onebasis(Ei, fun = "bs", knots = ktemp, degree = 2)
+  # fit model:
+  modi <- glm(death ~ cbi + baspm + ns(time, 7 * nyearschica) + dow,
+              data = chica,
+              family = quasipoisson)
+  # get effect estimates and CI:
+  predi <- crosspred(basis = cbi, model = modi, at = attemp, cen = centemp)
+  lower[i, ] <- t(predi$matRRlow)
+  coefs[i, ] <- t(predi$matRRfit)
+  upper[i, ] <- t(predi$matRRhigh)
+}
+@
+
+A graphical representation of the effects under single-lag models is shown in Figure \ref{fig:singlelagchica}, which has been generated with the following code:
+
+<<plotsinglelagchica, eval=FALSE>>=
+par(las = 1, mfrow = c(3, 1), mar = c(4, 4, 0, 2) + 0.1)
+for (i in 1:length(attemp)) {
+  plot(0:(nlagstemp - 1), coefs[, i], pch = 19, ylim = c(min(lower[, i]), max(upper[, i])),
+       xlab = "", ylab = "RR")
+  segments(0:(nlagstemp - 1), lower[, i], 0:(nlagstemp - 1), upper[, i])
+  abline(h = 1, lty = 2)
+  legend("topright", paste0("Temp = ", attemp[i]))
+  mtext("Lag", side = 1, line = 2, cex = 0.7)
+}
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsinglelagchicab, fig.width=8, fig.height=8, out.width='0.65\\textwidth', fig.align= 'center', echo = F>>=
+<<plotsinglelagchica>>
+@
+\caption{Relative risks (RR) and 95\% confidence intervals for the associations between temperature and mortality by lag, using single-lag models. Results are presented for temperatures \Sexpr{paste0(attemp, "\\degree C")}, taking \Sexpr{centemp}\degree C as a reference. The effect of temperature was modeled using a quadratic $b$-spline with 3 equally-spaced internal knots.}
+\label{fig:singlelagchica}
+\end{center}
+\end{figure}
+
+Figure \ref{fig:singlelagchica} shows that mortality risk increased with cold temperatures for lags $< 10$ days, except for lag 0, which even showed a protective effect at 0\degree C (compared to \Sexpr{centemp}\degree C). For heat, increased risks during the first four days were observed, followed by some lags with protective effects. Now fit the distributed lag model to the data:
+
+<<fitdlnmchica>>=
+# fixing the knots at equally spaced log values of lag:
+klag <- logknots(nlagstemp - 1, nk = 3)
+
+# crossbasis matrix for temperature:
+cbtemp <- crossbasis(x = chica$temp,
+                     argvar = list(fun = "bs", knots = ktemp),
+                     arglag = list(knots = klag),
+                     lag = nlagstemp - 1)
+
+# fit model:
+modtemp <- glm(death ~ cbtemp + baspm + ns(time, 7 * nyearschica) + dow,
+               data = chica,
+               family = quasipoisson)
+
+# effect estimates:
+predtemp <- crosspred(basis = cbtemp, model = modtemp, at = attemp, cen = centemp)
+@
+
+A graphical representation of the effects under the previous distributed lag model is shown in Figure \ref{fig:dlnmchica}, which has been generated with the following code:
+
+<<plotdlnmchica, eval=FALSE>>=
+par(las = 1, mfrow = c(3, 1), mar = c(4, 4, 0, 2) + 0.1)
+plot(predtemp, var = attemp[1])
+legend("topright", paste0("Temp = ", attemp[1]))
+
+plot(predtemp, var = attemp[2], yaxt = "n", ylim = c(0.94, 1.05))
+axis(2, at = c(0.96, 0.98, 1, 1.02, 1.04))
+legend("topright", paste0("Temp = ", attemp[2]))
+
+plot(predtemp, var = attemp[3])
+legend("topright", paste0("Temp = ", attemp[3]))
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotdlnmchicab, fig.width=8, fig.height=8, out.width='0.65\\textwidth', fig.align= 'center', echo = F>>=
+<<plotdlnmchica>>
+@
+\caption{Relative risks (RR) and 95\% confidence intervals for the associations between temperature and mortality by lag, using a distributed lag model. Results are presented for temperatures \Sexpr{paste0(attemp, "\\degree C")}, taking \Sexpr{centemp}\degree C as a reference. The effect of temperature was modeled using a crossbasis with a quadratic $b$-spline with 3 equally-spaced internal knots for the exposure-response association and a natural spline with 3 equally-spaced internal knots in the log space to model the lagged association.}
+\label{fig:dlnmchica}
+\end{center}
+\end{figure}
+
+According to Figure \ref{fig:dlnmchica}, associations were similar but more precise than those from single-lag models (Figure \ref{fig:singlelagchica}). A protective association at lag 0 was detected at both -20\degree C and 0\degree C. Now, we analyze the scenario in which there were no true RRs below one:
+
+<<setsimchicalag0null>>=
+RRmattemp <- predtemp$matRRfit
+round(RRmattemp, 2)
+
+attempc <- as.character(attemp)
+attempc
+
+# all effects null from lag 8 included
+RRmattemp[, paste0("lag", 6:(nlagstemp - 1))] <- 1
+
+# at temp 1:
+RRmattemp[attempc[1], paste0("lag", 0:2)] <- 1
+RRmattemp[attempc[1], paste0("lag", 3:5)] <- c(1.07, 1.12, 1.06)
+
+# at temp 2:
+RRmattemp[attempc[2], paste0("lag", 0:2)] <- 1
+RRmattemp[attempc[2], paste0("lag", 3:5)] <- c(1.08, 1.03, 1.01)
+
+# at temp 3:
+RRmattemp[attempc[3], paste0("lag", 0:5)] <- c(1.15, 1.20, 1.22, 1.15, 1.10, 1.04)
+
+RRmattemp
+@
+
+Now we need to set \Robject{type = "risk"} (because we have RRs) and \Robject{shape = "nonlinear"}:
+
+<<simchicalag0null, cache=TRUE>>=
+simchicalag0null <- collindlnm(model = modtemp,
+                               x = chica$temp,
+                               cb = cbtemp,
+                               at = attemp,
+                               cen = centemp,
+                               effect = RRmattemp,
+                               type = "risk",
+                               shape = "nonlinear",
+                               nsim = mynsim,
+                               seed = myseed)
+@
+
+The results, shown in Figure \ref{fig:simchicalag0null}, are obtained using the \Rmethod{plot} method:
+<<plotsimchicalag0null, eval=FALSE>>=
+par(las = 1, mfrow = c(3, 1), mar = c(4, 4, 2, 2))
+plot(simchicalag0null, varlegend = "Temperature")
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsimchicalag0nullb, fig.width=8, fig.height=8, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
+<<plotsimchicalag0null>>
+@
+\caption{Estimated relative risks (RR) for mortality as a function of temperature obtained from distributed lag models, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with gray lines. The red thick line represents the RRs observed in the real dataset. Results are presented for temperatures \Sexpr{paste0(attemp, "\\degree C")}, taking \Sexpr{centemp}\degree C as a reference. The results were obtained when simulating data with the following RRs: At temperature \Sexpr{paste0(attemp, "\\degree C")[1]}: RR = 1 at lags 0-2, and 6-30, RR = \Sexpr{RRmattemp[1, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[1, "lag4"]} at lag 4 and RR = \Sexpr{RRmattemp[1, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[2]}: RR = 1 for lags 0-2 and 6-30, RR = \Sexpr{RRmattemp[2, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[2, "lag4"]} at lag 4, RR \Sexpr{RRmattemp[2, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[3]}: RR = \Sexpr{RRmattemp[3, "lag0"]} at lag 0, RR = \Sexpr{RRmattemp[3, "lag1"]} at lag 1, RR \Sexpr{RRmattemp[3, "lag2"]} at lag 2, RR = \Sexpr{RRmattemp[3, "lag3"]} at lag 3, RR = \Sexpr{sprintf("%.2f", RRmattemp[3, "lag4"])} at lag 4, RR = \Sexpr{RRmattemp[3, "lag5"]} at lag 5 and RR = 1 at lags 6-30.}
+\label{fig:simchicalag0null}
+\end{center}
+\end{figure}
+
+The \Rmethod{plot} method also allows the user to select a subset of lags to be shown, using the argument \Rarg{lags} (by default, all lags are shown). Also, we can set \Rarg{show = "auto"} to let the grid plot be arranged automatically. For instance, the following code produces Figure \ref{fig:simchicalag0nullzoom}:
+
+<<plotsimchicalag0nullzoom, eval=FALSE>>=
+par(las = 1)
+plot(simchicalag0null, lags = 0:8, show = "auto", varlegend = "Temperature")
+@
+
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsimchicalag0nullzoomb, fig.width=8, fig.height=8, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
+<<plotsimchicalag0nullzoom>>
+@
+\caption{(Same than Figure \ref{fig:simchicalag0null} but showing until lag 10). Estimated relative risks (RR) for mortality as a function of temperature obtained from distributed lag models, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with gray lines. The red thick line represents the RRs observed in the real dataset. Results are presented for temperatures \Sexpr{paste0(attemp, "\\degree C")}, taking \Sexpr{centemp}\degree C as a reference. The results were obtained when simulating data with the following RRs: At temperature \Sexpr{paste0(attemp, "\\degree C")[1]}: RR = 1 at lags 0-2, and 6-30, RR = \Sexpr{RRmattemp[1, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[1, "lag4"]} at lag 4 and RR = \Sexpr{RRmattemp[1, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[2]}: RR = 1 for lags 0-2 and 6-30, RR = \Sexpr{RRmattemp[2, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[2, "lag4"]} at lag 4, RR \Sexpr{RRmattemp[2, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[3]}: RR = \Sexpr{RRmattemp[3, "lag0"]} at lag 0, RR = \Sexpr{RRmattemp[3, "lag1"]} at lag 1, RR \Sexpr{RRmattemp[3, "lag2"]} at lag 2, RR = \Sexpr{RRmattemp[3, "lag3"]} at lag 3, RR = \Sexpr{sprintf("%.2f", RRmattemp[3, "lag4"])} at lag 4, RR = \Sexpr{RRmattemp[3, "lag5"]} at lag 5 and RR = 1 at lags 6-30.}
+\label{fig:simchicalag0nullzoom}
+\end{center}
+\end{figure}
+
+The gray lines in Figure \ref{fig:simchicalag0null} show the results obtained when data were simulated from a scenario in which there were no true RRs below one. Hence, results obtained in that scenario could be compatible with the estimated effects using the real data, i.e. $\text{RR} < 1$ at lag 0 for cold temperatures and $\text{RR} < 1$ at the second week for hot temperatures. Still, even after exploring several potential scenarios, the observed results lay at the extreme of the obtained distribution. This, and the fact that single-lag models also show $\text{RR} < 1$ at lag 0 for cold temperatures, suggest that there might be other explanations for this result.\\
+
+
+\clearpage
+
+
+
+<<setoriginalpar, echo=FALSE>>=
+par(opar) # restore original par settings
+@
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%
+%%%%     Bibliography
+%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\bibliographystyle{apalike}
+\cleardoublepage
+%\phantomsection
+%\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{bibliography}{}
+
+\end{document}
