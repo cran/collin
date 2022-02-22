@@ -85,11 +85,10 @@
 <<options, include=F>>=
 library(knitr)
 library(xtable)
-#options(width = 120)
-#options(scipen = 999, warnings = FALSE) # to avoid scientic notatino in knitr outputs
-options(scipen = 999) # to avoid scientic notatino in knitr outputs
-opts_chunk$set(size = 'small')
-opar <- par()         # make a copy of current par settings
+options(scipen = 999) # to avoid scientic notation in knitr outputs
+opts_chunk$set(size = 'small',
+               cache.path = 'collin_cache/collin-',
+               fig.align = 'center')
 @
 
 \maketitle
@@ -105,7 +104,7 @@ opar <- par()         # make a copy of current par settings
 %%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-This document is a user's guide for the \R\footnote{\R\ is a free and open source software and it is available at CRAN (\url{http://cran.r-project.org/}).} package \collin\ for the visualization of the effects of collinearity in distributed lag models (DLNM). The package usage is based on two elements provided by the user: a model including a \Robject{crossbasis} created with the \Rpkg{dlnm} (\url{https://cran.r-project.org/web/packages/dlnm/}), and a set of hypothesized true effects. Then, \collin\ performs a simulation study and provides a visualization of results to assess whether the actual results of the study could be driven by collinearity, as described in the original work by \citet{Basaganacollin2020}. The illustrative examples used there are reproduced here.
+This document is a user's guide for the \R\footnote{\R\ is a free and open source software and it is available at CRAN (\url{http://cran.r-project.org/}).} package \collin\ for the visualization of the effects of collinearity in distributed lag models (DLNM). The package usage is based on two elements provided by the user: a model including a \Robject{crossbasis} created with the \Rpkg{dlnm} (\url{https://cran.r-project.org/web/packages/dlnm/}), and a set of hypothesized true effects. Then, \collin\ performs a simulation study and provides a visualization of results to assess whether the actual results of the study could be driven by collinearity, as described in the original work by \citet{Basaganacollin2021}. The illustrative examples used there are reproduced here.
 %%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%
 %%%
@@ -192,15 +191,11 @@ For the case of a non-linear effect, the \Rmethod{plot} method requires three ad
 %%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%
 \section{Illustrative examples}
-For further details on the following illustrative examples, see the original work\cite{Basaganacollin2020}. Datasets \Rdata{mempm25} and \Rdata{rhospno2}, included in the \Rpkg{collin} package and used in sections \ref{sec:mempm25} and \ref{sec:rhospno2} of this document, are synthetic datasets generated with the \R\ package \Rpkg{synthpop}\footnote{\url{https://cran.r-project.org/web/packages/synthpop/index.html}}, based on real datasets used in the original work\cite{Basaganacollin2020}. Hence, results shown in this document can (and should) differ from the original results.\\
+For further details on the following illustrative examples, see the original work\cite{Basaganacollin2021}. Data sets \Rdata{mempm25} and \Rdata{rhospno2}, included in the \Rpkg{collin} package and used in sections \ref{sec:mempm25} and \ref{sec:rhospno2} of this document, are synthetic data sets generated with the \R\ package \Rpkg{synthpop}\footnote{\url{https://cran.r-project.org/web/packages/synthpop/index.html}}, based on real data sets used in the original work\cite{Basaganacollin2021}. Hence, results shown in this document can (and should) differ from the original results.\\
 
-<<nsim, echo=FALSE>>=
-mynsim <- 50     # number of simulations
-@
-
-First, we set the number of simulations and the seed that will be applied to all examples. We set the number of simulations $\Robject{mynsim} = \Sexpr{mynsim}$ to reduce the computation time needed to reproduce all examples in this vignette. However, in a particular study, the number of simulations can be increased (for instance, to the default value 100).
+First, we set the number of simulations and the seed that will be applied to all examples:
 <<nsimseed>>=
-<<nsim>>
+mynsim <- 100    # number of simulations
 myseed <- 23984  # seed
 @
 
@@ -379,12 +374,50 @@ plot(simconseffpm25, xlab = "Year", ylab = "Change in mean working memory")
 <<plotsimconseffpm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align= 'center', echo = F>>=
 <<plotsimconseffpm25>>
 @
-\caption{Estimated effect of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure across the different time periods over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The red thick line represents the effects observed in the real dataset (i.e. original fitted model). Results obtained when simulating a constant effect across all lags, with the cumulative effect being equal to the estimated using the real data.}
+\caption{Estimated effect of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure across the different time periods over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The red thick line represents the effects observed in the real data set (i.e. original fitted model). Results obtained when simulating a constant effect across all lags, with the cumulative effect being equal to the estimated using the real data.}
 \label{fig:simconseffpm25}
 \end{center}
 \end{figure}
 
-According to Figure \ref{fig:simconseffpm25}, the observed pattern is not consistent with a constant effect at all lags, with the same cumulative effect. We try now another pattern, one in which \PM\ only has a (negative) effect at lag 5, and has no effect on the other lags. The effect is four times the observed cumulative effect:
+According to Figure \ref{fig:simconseffpm25}, the observed pattern is not consistent with a constant effect at all lags, with the same cumulative effect.
+
+We try now another pattern, in which \PM\ only has a (negative) effect at years 1 and 6, and has no effect at the other years. The effect is 1.5 times the observed cumulative effect:
+
+<<setsimmempm25lag1and6>>=
+lag1and6effpm25 <- rep(0, nlagspm25)
+lag1and6effpm25[c(2, 7)] <- 1.5 * predmempm25$allfit
+round(lag1and6effpm25, 2)
+@
+
+New simulations under that hypothetical effect:
+
+<<simmempm25lag1and6, cache=TRUE>>=
+simlag1and6effpm25 <- collindlnm(model = modmempm25,
+                                 x = Qpm25,
+                                 cb = cbpm25,
+                                 at = pm25change,
+                                 effect = lag1and6effpm25,
+                                 nsim = mynsim,
+                                 seed = myseed)
+@
+
+And the results, shown in Figure \ref{fig:simlag1and6effpm25}, are obtained using the \Rmethod{plot} method:
+<<plotsimlag1and6effpm25, eval=FALSE>>=
+par(las = 1)
+plot(simlag1and6effpm25, xlab = "Year", ylab = "Change in mean working memory")
+@
+
+\begin{figure}[!ht]
+\begin{center}
+<<plotsimlag1and6effpm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
+<<plotsimlag1and6effpm25>>
+@
+\caption{Estimated effect of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure across the different time periods over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The red thick line represents the effects observed in the real data set (i.e. original fitted model). Results obtained when simulating a real effect of years 1 and 6 (1.5 times the size of the cumulative effect estimated by the original model) and no effect of all other periods.}
+\label{fig:simlag1and6effpm25}
+\end{center}
+\end{figure}
+
+The resulting curves in Figure \ref{fig:simlag1and6effpm25} are not consistent with the observed pattern either. Finally, we try another pattern, one in which \PM\ only has a (negative) effect at lag 5, and has no effect on the other lags. The effect is four times the observed cumulative effect:
 <<setsimmempm25lag5>>=
 lag5seffpm25 <- rep(0, nlagspm25)
 lag5seffpm25[6] <- 4 * predmempm25$allfit
@@ -414,12 +447,20 @@ plot(simlag5effpm25, xlab = "Year", ylab = "Change in mean working memory")
 <<plotsimlag5effpm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
 <<plotsimlag5effpm25>>
 @
-\caption{Estimated effect of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure across the different time periods over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The red thick line represents the effects observed in the real dataset (i.e. original fitted model). Results obtained when simulating a real effect of year 5 (four times the size of the cumulative effect estimated by the original model) and no effect of all other periods.}
+\caption{Estimated effect of a \Sexpr{pm25change} \microgm\ increase in \PM\ exposure across the different time periods over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The red thick line represents the effects observed in the real data set (i.e. original fitted model). Results obtained when simulating a real effect of year 5 (four times the size of the cumulative effect estimated by the original model) and no effect of all other periods.}
 \label{fig:simlag5effpm25}
 \end{center}
 \end{figure}
 
-According to Figure \ref{fig:simlag5effpm25}, the estimated effect pattern using the real data is relatively similar to the one that would be obtained under a truth in which only year 5 has an effect. Under that scenario, due to the correlation between exposure at different times (collinearity) and to the specific choice to constraint lagged associations, most replications of the study would report non-existent negative effects at lags 1 and 6 and positive effects at lags 3 and 4. In a scenario like that, with a single period having an effect, constraining lagged effects with a spline function would not be a good choice, as it imposes smooth changes across lags. In reality, however, no one knows the true data generating mechanism, which makes the choice of the appropriate lag function difficult.
+Based on the observed results, this is a non-intuitive scenario. It was obtained after exploring all possibilities in which there is an effect only in one of the periods. The scenario with an effect only at year 5 (Figure \ref{fig:simlag5effpm25}) reproduced the most similar pattern to the observed one. This is an interesting scenario because fitting the specified distributed lag model generates positive estimates at years 3 and 4. The magnitude of the simulated effect (four times the observed cumulative effect) was important, as only with large effects were we able to observe large deviations in the opposite direction. However, even this scenario that generated similar curves to the observed pattern did not generate curves as extreme as the observed one. Thus, we should conclude that this particular alternative scenario is not compatible with the data.
+
+Still, the example in Figure \ref{fig:simlag5effpm25} shows a scenario in which a poor choice of function to constrain lagged associations (smoothed lagged effects are not a good choice if exposure is associated with the outcome at only one period) in combination with the correlation between exposure at different times (collinearity) and strong signal to noise ratio will lead to estimates that would report non-existent negative effects at some years. Given the direction and magnitude of those biases, one could not discard the possibility that a bad choice of constraining functions combined with collinearity may have a role in explaining the unexpected positive results.
+
+
+%According to Figure \ref{fig:simlag5effpm25}, the estimated effect pattern using the real data is relatively similar to the one that would be obtained under a truth in which only year 5 has an effect. Under that scenario, due to the correlation between exposure at different times (collinearity) and to the specific choice to constraint lagged associations, most replications of the study would report non-existent negative effects at lags 1 and 6 and positive effects at lags 3 and 4. In a scenario like that, with a single period having an effect, constraining lagged effects with a spline function would not be a good choice, as it imposes smooth changes across lags.
+
+
+In reality, however, no one knows the true data generating mechanism, which makes the choice of the appropriate lag function difficult.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -606,7 +647,7 @@ plot(predrhospno2, var = no2change, xlim = c(0, nlagsno2 - 1), main = "", xlab =
 \end{center}
 \end{figure}
 
-According to Figure \ref{fig:dlnmrhospno2}, when fitting the distributed lag model, there was a statistically significant increase in respiratory hospital admissions associated with levels of \NO\ at lag 0, followed by a statistically significant decreased risk at lags 1 and 2, and a subsequent statistically significant increase around lag 5. The decrease in risk at lags 1 and 2 could be consistent with the harvesting or short-term mortality displacement phenomenon (details in the original work\cite{Basaganacollin2020}). However, there is also the possibility that this decrease in risk and the subsequent increases around lag 5 could be explained by collinearity since, as we showed above, collinearity can induce estimates with opposing signs. To explore its plausibility, we will analyze a hypothetical truth in which the real effect exists only at lag 0, with the same size as the estimated by the fitted model.\\
+According to Figure \ref{fig:dlnmrhospno2}, when fitting the distributed lag model, there was a statistically significant increase in respiratory hospital admissions associated with levels of \NO\ at lag 0, followed by a statistically significant decreased risk at lags 1 and 2, and a subsequent statistically significant increase around lag 5. The decrease in risk at lags 1 and 2 could be consistent with the harvesting or short-term mortality displacement phenomenon (details in the original work\cite{Basaganacollin2021}). However, there is also the possibility that this decrease in risk and the subsequent increases around lag 5 could be explained by collinearity since, as we showed above, collinearity can induce estimates with opposing signs. To explore its plausibility, we will analyze a hypothetical truth in which the real effect exists only at lag 0, with the same size as the estimated by the fitted model.\\
 
 
 <<setsimrhospno2lag0>>=
@@ -640,12 +681,12 @@ plot(simlag0effno2, xlab = "Day", ylab = "RR of hospital admission")
 <<plotsimlag0effno2b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
 <<plotsimlag0effno2>>
 @
-\caption{Estimated relative risk (RR) of hospital admission for respiratory cause for a \Sexpr{no2change} \microgm\ increase in ambient \NO\ concentration across different lags, obtained from a distributed lag model, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The results were obtained when simulating an effect only at lag 0 and of the same magnitude as the estimated with the real data. The red thick line represents the RRs estimated with the real dataset.}
+\caption{Estimated relative risk (RR) of hospital admission for respiratory cause for a \Sexpr{no2change} \microgm\ increase in ambient \NO\ concentration across different lags, obtained from a distributed lag model, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with lines. The results were obtained when simulating an effect only at lag 0 and of the same magnitude as the estimated with the real data. The red thick line represents the RRs estimated with the real data set.}
 \label{fig:simlag0effno2}
 \end{center}
 \end{figure}
 
-Results displayed in Figure \ref{fig:simlag0effno2} show that, under a hypothetical truth in which only lag 0 has a real effect, the pattern of the estimated effects bear some similarity to those obtained with the real data (red line), so that collinearity could be involved in these results. I.e. even under the situation in which only lag 0 has a real effect, distributed lag models can suggest a reduction in risk at lags 1-2 and subsequent increases in risk around lag 5. It is important to note that the observed pattern is compatible with many real scenarios, and in particular it is also compatible with a scenario with a real increase in risk at lag 0 and a real decrease in risk at lag 2 (e.g. because of the harvesting phenomenon) (details in the original work\cite{Basaganacollin2020}).
+Results displayed in Figure \ref{fig:simlag0effno2} show that, under a hypothetical truth in which only lag 0 has a real effect, the pattern of the estimated effects bear some similarity to those obtained with the real data (red line), so that collinearity could be involved in these results. I.e. even under the situation in which only lag 0 has a real effect, distributed lag models can suggest a reduction in risk at lags 1-2 and subsequent increases in risk around lag 5. It is important to note that the observed pattern is compatible with many real scenarios, and in particular it is also compatible with a scenario with a real increase in risk at lag 0 and a real decrease in risk at lag 2 (e.g. because of the harvesting phenomenon) (details in the original work\cite{Basaganacollin2021}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -851,7 +892,7 @@ plot(simchicalag0null, varlegend = "Temperature")
 <<plotsimchicalag0nullb, fig.width=8, fig.height=8, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
 <<plotsimchicalag0null>>
 @
-\caption{Estimated relative risks (RR) for mortality as a function of temperature obtained from distributed lag models, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with gray lines. The red thick line represents the RRs observed in the real dataset. Results are presented for temperatures \Sexpr{paste0(attemp, "\\degree C")}, taking \Sexpr{centemp}\degree C as a reference. The results were obtained when simulating data with the following RRs: At temperature \Sexpr{paste0(attemp, "\\degree C")[1]}: RR = 1 at lags 0-2, and 6-30, RR = \Sexpr{RRmattemp[1, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[1, "lag4"]} at lag 4 and RR = \Sexpr{RRmattemp[1, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[2]}: RR = 1 for lags 0-2 and 6-30, RR = \Sexpr{RRmattemp[2, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[2, "lag4"]} at lag 4, RR \Sexpr{RRmattemp[2, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[3]}: RR = \Sexpr{RRmattemp[3, "lag0"]} at lag 0, RR = \Sexpr{RRmattemp[3, "lag1"]} at lag 1, RR \Sexpr{RRmattemp[3, "lag2"]} at lag 2, RR = \Sexpr{RRmattemp[3, "lag3"]} at lag 3, RR = \Sexpr{sprintf("%.2f", RRmattemp[3, "lag4"])} at lag 4, RR = \Sexpr{RRmattemp[3, "lag5"]} at lag 5 and RR = 1 at lags 6-30.}
+\caption{Estimated relative risks (RR) for mortality as a function of temperature obtained from distributed lag models, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with gray lines. The red thick line represents the RRs observed in the real data set. Results are presented for temperatures \Sexpr{paste0(attemp, "\\degree C")}, taking \Sexpr{centemp}\degree C as a reference. The results were obtained when simulating data with the following RRs: At temperature \Sexpr{paste0(attemp, "\\degree C")[1]}: RR = 1 at lags 0-2, and 6-30, RR = \Sexpr{RRmattemp[1, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[1, "lag4"]} at lag 4 and RR = \Sexpr{RRmattemp[1, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[2]}: RR = 1 for lags 0-2 and 6-30, RR = \Sexpr{RRmattemp[2, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[2, "lag4"]} at lag 4, RR \Sexpr{RRmattemp[2, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[3]}: RR = \Sexpr{RRmattemp[3, "lag0"]} at lag 0, RR = \Sexpr{RRmattemp[3, "lag1"]} at lag 1, RR \Sexpr{RRmattemp[3, "lag2"]} at lag 2, RR = \Sexpr{RRmattemp[3, "lag3"]} at lag 3, RR = \Sexpr{sprintf("%.2f", RRmattemp[3, "lag4"])} at lag 4, RR = \Sexpr{RRmattemp[3, "lag5"]} at lag 5 and RR = 1 at lags 6-30.}
 \label{fig:simchicalag0null}
 \end{center}
 \end{figure}
@@ -869,7 +910,7 @@ plot(simchicalag0null, lags = 0:8, show = "auto", varlegend = "Temperature")
 <<plotsimchicalag0nullzoomb, fig.width=8, fig.height=8, out.width='0.65\\textwidth', fig.align='center', echo=FALSE>>=
 <<plotsimchicalag0nullzoom>>
 @
-\caption{(Same than Figure \ref{fig:simchicalag0null} but showing until lag 10). Estimated relative risks (RR) for mortality as a function of temperature obtained from distributed lag models, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with gray lines. The red thick line represents the RRs observed in the real dataset. Results are presented for temperatures \Sexpr{paste0(attemp, "\\degree C")}, taking \Sexpr{centemp}\degree C as a reference. The results were obtained when simulating data with the following RRs: At temperature \Sexpr{paste0(attemp, "\\degree C")[1]}: RR = 1 at lags 0-2, and 6-30, RR = \Sexpr{RRmattemp[1, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[1, "lag4"]} at lag 4 and RR = \Sexpr{RRmattemp[1, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[2]}: RR = 1 for lags 0-2 and 6-30, RR = \Sexpr{RRmattemp[2, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[2, "lag4"]} at lag 4, RR \Sexpr{RRmattemp[2, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[3]}: RR = \Sexpr{RRmattemp[3, "lag0"]} at lag 0, RR = \Sexpr{RRmattemp[3, "lag1"]} at lag 1, RR \Sexpr{RRmattemp[3, "lag2"]} at lag 2, RR = \Sexpr{RRmattemp[3, "lag3"]} at lag 3, RR = \Sexpr{sprintf("%.2f", RRmattemp[3, "lag4"])} at lag 4, RR = \Sexpr{RRmattemp[3, "lag5"]} at lag 5 and RR = 1 at lags 6-30.}
+\caption{(Same than Figure \ref{fig:simchicalag0null} but showing until lag 10). Estimated relative risks (RR) for mortality as a function of temperature obtained from distributed lag models, over \Sexpr{mynsim} simulations. Estimates from the same simulation run are connected with gray lines. The red thick line represents the RRs observed in the real data set. Results are presented for temperatures \Sexpr{paste0(attemp, "\\degree C")}, taking \Sexpr{centemp}\degree C as a reference. The results were obtained when simulating data with the following RRs: At temperature \Sexpr{paste0(attemp, "\\degree C")[1]}: RR = 1 at lags 0-2, and 6-30, RR = \Sexpr{RRmattemp[1, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[1, "lag4"]} at lag 4 and RR = \Sexpr{RRmattemp[1, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[2]}: RR = 1 for lags 0-2 and 6-30, RR = \Sexpr{RRmattemp[2, "lag3"]} at lag 3, RR = \Sexpr{RRmattemp[2, "lag4"]} at lag 4, RR \Sexpr{RRmattemp[2, "lag5"]} at lag 5; at temperature \Sexpr{paste0(attemp, "\\degree C")[3]}: RR = \Sexpr{RRmattemp[3, "lag0"]} at lag 0, RR = \Sexpr{RRmattemp[3, "lag1"]} at lag 1, RR \Sexpr{RRmattemp[3, "lag2"]} at lag 2, RR = \Sexpr{RRmattemp[3, "lag3"]} at lag 3, RR = \Sexpr{sprintf("%.2f", RRmattemp[3, "lag4"])} at lag 4, RR = \Sexpr{RRmattemp[3, "lag5"]} at lag 5 and RR = 1 at lags 6-30.}
 \label{fig:simchicalag0nullzoom}
 \end{center}
 \end{figure}
@@ -878,12 +919,6 @@ The gray lines in Figure \ref{fig:simchicalag0null} show the results obtained wh
 
 
 \clearpage
-
-
-
-<<setoriginalpar, echo=FALSE>>=
-par(opar) # restore original par settings
-@
 
 
 

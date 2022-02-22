@@ -21,11 +21,8 @@
 #'
 #' @examples
 #'  # time series:
-#'  opar <- par(no.readonly = TRUE)      # make a copy of current par settings
 #'  par(las = 1, mfrow = c(3, 1))
 #'  with(rhospno2, plot(date, hresp, type = "l", lwd = 0.5))
 #'  with(rhospno2, plot(date, no2, type = "l", lwd = 0.5))
 #'  with(rhospno2, plot(date, temp, type = "l", lwd = 0.5))
-#'  par(opar)                            # restore original par settings
-
 "rhospno2"

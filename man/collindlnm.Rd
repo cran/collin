@@ -5,9 +5,19 @@
 \title{Simulates effects from a distributed lag model
 pattern.}
 \usage{
-collindlnm(model, x, cb, at = 1, cen = 0, effect, type = c("coef",
-  "risk"), shape = c("linear", "nonlinear"), nsim = 100,
-  verbose = TRUE, seed = NULL)
+collindlnm(
+  model,
+  x,
+  cb,
+  at = 1,
+  cen = 0,
+  effect,
+  type = c("coef", "risk"),
+  shape = c("linear", "nonlinear"),
+  nsim = 100,
+  verbose = TRUE,
+  seed = NULL
+)
 }
 \arguments{
 \item{model}{a model that includes a crossbasis. Currently, models allowed are those

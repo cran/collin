@@ -5,8 +5,14 @@
 \title{Visualize effects of collinearity in distributed lag model under an
   hypothetical non-linear effect pattern.}
 \usage{
-\method{plot}{collindlnmnonlinear}(x, lags = NULL, show = c("manual",
-  "auto", "sequence"), addlegend = TRUE, varlegend = NULL, ...)
+\method{plot}{collindlnmnonlinear}(
+  x,
+  lags = NULL,
+  show = c("manual", "auto", "sequence"),
+  addlegend = TRUE,
+  varlegend = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{an object of class \code{"collindlnmnonlinear"}, which is generated

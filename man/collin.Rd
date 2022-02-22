@@ -3,12 +3,11 @@
 \docType{package}
 \name{collin}
 \alias{collin}
-\alias{collin-package}
 \title{collin: Visualizing the effects of collinearity in distributed lag models
   and other linear models}
 \description{
-Visual tool to assessing whether the results of a study could be
-  driven by collinearity.
+Tool to assessing whether the results of a study could be driven
+  by collinearity.
 }
 \section{Procedure}{
  The tool consists of a two-step procedure.
@@ -33,6 +32,7 @@ Visual tool to assessing whether the results of a study could be
 \references{
 The methodology used in the package is described in
 
-Basagana X, Barrera-Gomez J. Visualizing the effects of collinearity in
-  distributed lag models. \emph{International Journal of Epidemiology}. (under review)
+Basagaña X, Barrera-Gómez J. Visualizing the effects of collinearity in
+  distributed lag models. \emph{International Journal of Epidemiology}. 2021;
+  51(1):334-344.
 }

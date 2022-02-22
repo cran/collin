@@ -4,7 +4,8 @@
 \name{mempm25}
 \alias{mempm25}
 \title{Working memory test scores and air pollution.}
-\format{A data frame with 8,884 rows and 17 variables:
+\format{
+A data frame with 8,884 rows and 17 variables:
 \describe{
 \item{id}{individual identifier}
 \item{session}{test session identifier}
@@ -31,7 +32,8 @@
   (\eqn{\mu}g/m\eqn{^3}) at residence address during year 7}
 \item{wei}{weight of the observation}
 \item{wmemo}{working memory test score}
-}}
+}
+}
 \source{
 See `References'.
 }

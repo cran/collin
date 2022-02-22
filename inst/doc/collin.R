@@ -1,11 +1,10 @@
 ## ----options, include=F-------------------------------------------------------
 library(knitr)
 library(xtable)
-#options(width = 120)
-#options(scipen = 999, warnings = FALSE) # to avoid scientic notatino in knitr outputs
-options(scipen = 999) # to avoid scientic notatino in knitr outputs
-opts_chunk$set(size = 'small')
-opar <- par()         # make a copy of current par settings
+options(scipen = 999) # to avoid scientic notation in knitr outputs
+opts_chunk$set(size = 'small',
+               cache.path = 'collin_cache/collin-',
+               fig.align = 'center')
 
 ## ----echo=T, eval=F-----------------------------------------------------------
 #  install.packages("collin")
@@ -19,11 +18,8 @@ library(collin)
 ## ----eval=F-------------------------------------------------------------------
 #  browseVignettes("collin")
 
-## ----nsim, echo=FALSE---------------------------------------------------------
-mynsim <- 50     # number of simulations
-
 ## ----nsimseed-----------------------------------------------------------------
-mynsim <- 50     # number of simulations
+mynsim <- 100    # number of simulations
 myseed <- 23984  # seed
 
 ## ----lib----------------------------------------------------------------------
@@ -156,6 +152,28 @@ simconseffpm25 <- collindlnm(model = modmempm25,    # the original fitted model
 ## ----plotsimconseffpm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align= 'center', echo = F----
 par(las = 1)
 plot(simconseffpm25, xlab = "Year", ylab = "Change in mean working memory")
+
+## ----setsimmempm25lag1and6----------------------------------------------------
+lag1and6effpm25 <- rep(0, nlagspm25)
+lag1and6effpm25[c(2, 7)] <- 1.5 * predmempm25$allfit
+round(lag1and6effpm25, 2)
+
+## ----simmempm25lag1and6, cache=TRUE-------------------------------------------
+simlag1and6effpm25 <- collindlnm(model = modmempm25,
+                                 x = Qpm25,
+                                 cb = cbpm25,
+                                 at = pm25change,
+                                 effect = lag1and6effpm25,
+                                 nsim = mynsim,
+                                 seed = myseed)
+
+## ----plotsimlag1and6effpm25, eval=FALSE---------------------------------------
+#  par(las = 1)
+#  plot(simlag1and6effpm25, xlab = "Year", ylab = "Change in mean working memory")
+
+## ----plotsimlag1and6effpm25b, fig.width=8, fig.height=5, out.width='0.65\\textwidth', fig.align='center', echo=FALSE----
+par(las = 1)
+plot(simlag1and6effpm25, xlab = "Year", ylab = "Change in mean working memory")
 
 ## ----setsimmempm25lag5--------------------------------------------------------
 lag5seffpm25 <- rep(0, nlagspm25)
@@ -510,7 +528,4 @@ plot(simchicalag0null, varlegend = "Temperature")
 ## ----plotsimchicalag0nullzoomb, fig.width=8, fig.height=8, out.width='0.65\\textwidth', fig.align='center', echo=FALSE----
 par(las = 1)
 plot(simchicalag0null, lags = 0:8, show = "auto", varlegend = "Temperature")
-
-## ----setoriginalpar, echo=FALSE-----------------------------------------------
-par(opar) # restore original par settings
 

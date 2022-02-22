@@ -2,8 +2,12 @@
 
 S3method(plot,collindlnmlinear)
 S3method(plot,collindlnmnonlinear)
+S3method(simulatedlnm,linearglm)
+S3method(simulatedlnm,linearlme)
+S3method(simulatedlnm,nonlinearglm)
 export(collindlnm)
 export(lagpad)
+export(simulatedlnm)
 importFrom(MASS,ginv)
 importFrom(VGAM,rbetabinom)
 importFrom(dlnm,crossbasis)

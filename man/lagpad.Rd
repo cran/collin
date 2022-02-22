@@ -17,9 +17,3 @@ A lagged vector.
 \description{
 Function to get a vector lagged.
 }
-\examples{
- s <- 1:5
- s1 <- lagpad(s, k = 1)
- s2 <- lagpad(s, k = 2)
- data.frame(s, s1, s2)
-}

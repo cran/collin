@@ -6,8 +6,7 @@
   Bernoulli or Poisson distribution. It wraps \code{rpoisod} and
   \code{rbinomod} functions.}
 \usage{
-rod(n, mu, d, type = c("binomial", "quasibinomial", "poisson",
-  "quasipoisson"))
+rod(n, mu, d, type = c("binomial", "quasibinomial", "poisson", "quasipoisson"))
 }
 \arguments{
 \item{n}{integer. Number of observations.}

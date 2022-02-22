@@ -1,18 +1,18 @@
-citHeader("To cite the 'collin' package in publications use:")
-
-citEntry(entry = "Article",
-         title = "Visualizing the effects of collinearity in distributed lag models",
-         author = personList(as.person("Xavier Basaga\\~na"),
-                             as.person("Jose Barrera-G\\'omez")),
-         journal = "International Journal of Epidemiology",
-         year = "2021 (under review)",
-         volume = "",
-         number = "",
-         pages = "",
-         url = "https://academic.oup.com/ije/",
-         textVersion = paste("Xavier Basagana, Jose Barrera-Gomez (2021, under review).",
-                             "Visualizing the effects of collinearity in distributed lag models.",
+bibentry(bibtype     = "Article",
+         textVersion = paste("Basagana X, Barrera-Gomez J.",
+                             "Reflection on modern methods: visualizing the effects of collinearity in distributed lag models.",
                              "International Journal of Epidemiology",
-                             "URL https://academic.oup.com/ije/.")
+                             "2021;51(1):334-344.",
+                             "DOI: 10.1093/ije/dyab179."),
+         title       = "Reflection on modern methods: visualizing the effects of collinearity in distributed lag models",
+         author      = c(person(given = "Xavier", family = "Basaga\\~na"),
+                         person(given = "Jose", family = "Barrera-G\\'omez")),
+         journal     = "International Journal of Epidemiology",
+         year        = "2021",
+         volume      = "51",
+         number      = "1",
+         pages       = "334--344",
+         doi         = "10.1093/ije/dyab179",
+         url         = "https://doi.org/10.1093/ije/dyab179",
+         header      = "If you use collin, please cite:"
 )
-

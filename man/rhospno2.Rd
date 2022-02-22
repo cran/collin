@@ -4,7 +4,8 @@
 \name{rhospno2}
 \alias{rhospno2}
 \title{Respiratory hospital admissions and air pollution.}
-\format{A data frame with 3,652 rows and 7 variables:
+\format{
+A data frame with 3,652 rows and 7 variables:
 \describe{
 \item{date}{date of the observation}
 \item{t}{numerical indicator of date}
@@ -13,7 +14,8 @@
 \item{temp}{ambient temperature in Celsius degrees}
 \item{no2}{NO\eqn{_2} concentration in \eqn{\mu}g/m\eqn{^3}}
 \item{hresp}{number of hospital admissions for respiratory causes}
-}}
+}
+}
 \usage{
 rhospno2
 }
@@ -29,11 +31,9 @@ This is a synthetic dataset generated with the \code{synthpop} package, based on
 }
 \examples{
  # time series:
- opar <- par(no.readonly = TRUE)      # make a copy of current par settings
  par(las = 1, mfrow = c(3, 1))
  with(rhospno2, plot(date, hresp, type = "l", lwd = 0.5))
  with(rhospno2, plot(date, no2, type = "l", lwd = 0.5))
  with(rhospno2, plot(date, temp, type = "l", lwd = 0.5))
- par(opar)                            # restore original par settings
 }
 \keyword{datasets}
