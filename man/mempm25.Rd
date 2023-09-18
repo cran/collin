@@ -15,21 +15,21 @@ A data frame with 8,884 rows and 17 variables:
 \item{educ}{maternal education}
 \item{resses}{residential neighborhood socioeconomic status indicator}
 \item{pm25y0}{estimated average concentration of PM\eqn{_{2.5}}
-  (\eqn{\mu}g/m\eqn{^3}) at residence address during pregnancy}
+(\eqn{\mu}g/m\eqn{^3}) at residence address during pregnancy}
 \item{pm25y1}{estimated average concentration of PM\eqn{_{2.5}}
-  (\eqn{\mu}g/m\eqn{^3}) at residence address during year 1}
+(\eqn{\mu}g/m\eqn{^3}) at residence address during year 1}
 \item{pm25y2}{estimated average concentration of PM\eqn{_{2.5}}
-  (\eqn{\mu}g/m\eqn{^3}) at residence address during year 2}
+(\eqn{\mu}g/m\eqn{^3}) at residence address during year 2}
 \item{pm25y3}{estimated average concentration of PM\eqn{_{2.5}}
-  (\eqn{\mu}g/m\eqn{^3}) at residence address during year 3}
+(\eqn{\mu}g/m\eqn{^3}) at residence address during year 3}
 \item{pm25y4}{estimated average concentration of PM\eqn{_{2.5}}
-  (\eqn{\mu}g/m\eqn{^3}) at residence address during year 4}
+(\eqn{\mu}g/m\eqn{^3}) at residence address during year 4}
 \item{pm25y5}{estimated average concentration of PM\eqn{_{2.5}}
-  (\eqn{\mu}g/m\eqn{^3}) at residence address during year 5}
+(\eqn{\mu}g/m\eqn{^3}) at residence address during year 5}
 \item{pm25y6}{estimated average concentration of PM\eqn{_{2.5}}
-  (\eqn{\mu}g/m\eqn{^3}) at residence address during year 6}
+(\eqn{\mu}g/m\eqn{^3}) at residence address during year 6}
 \item{pm25y7}{estimated average concentration of PM\eqn{_{2.5}}
-  (\eqn{\mu}g/m\eqn{^3}) at residence address during year 7}
+(\eqn{\mu}g/m\eqn{^3}) at residence address during year 7}
 \item{wei}{weight of the observation}
 \item{wmemo}{working memory test score}
 }
@@ -42,13 +42,13 @@ mempm25
 }
 \description{
 Simulated data for repeated measures of working memory test scores and
-  residential PM\eqn{_{2.5}} levels in 2,221 children.
+residential PM\eqn{_{2.5}} levels in 2,221 children.
 }
 \details{
 This is a synthetic dataset generated with the \code{synthpop} package, based on
-  a cohort study of children examining the association between PM\eqn{_{2.5}}
-  concentrations during the prenatal period and the first seven postnatal years on
-  cognitive tests taken at age 8 (see `References').
+a cohort study of children examining the association between PM\eqn{_{2.5}}
+concentrations during the prenatal period and the first seven postnatal years on
+cognitive tests taken at age 8 (see `References').
 }
 \examples{
  # correlation of air pollution levels between two different periods:
@@ -57,7 +57,7 @@ This is a synthetic dataset generated with the \code{synthpop} package, based on
 }
 \references{
 Rivas I \emph{et al}. Association between Early Life Exposure to Air Pollution and
-   Working Memory and Attention. \emph{Environmental Health Perspectives}. 2019;127(5):57002.
-   doi: 10.1289/EHP3169.
+Working Memory and Attention. \emph{Environmental Health Perspectives}. 2019;127(5):57002.
+doi: 10.1289/EHP3169.
 }
 \keyword{datasets}

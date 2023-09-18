@@ -20,17 +20,17 @@ simulatedlnm(x)
 }
 \description{
 Simulation procedure internally called by the \code{\link{collindlnm}}
-  function for a given hypothetical effect.
+function for a given hypothetical effect.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{linearlme}: case of a hypothetical linear effect in a model of
+\item \code{simulatedlnm(linearlme)}: case of a hypothetical linear effect in a model of
 class \code{"lme"}.
 
-\item \code{linearglm}: case of a hypothetical linear effect in a model of
+\item \code{simulatedlnm(linearglm)}: case of a hypothetical linear effect in a model of
 class \code{"glm"}.
 
-\item \code{nonlinearglm}: case of a hypothetical non-linear effect in a model
+\item \code{simulatedlnm(nonlinearglm)}: case of a hypothetical non-linear effect in a model
 of class \code{"glm"}.
-}}
 
+}}

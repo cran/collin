@@ -21,13 +21,13 @@ rhospno2
 }
 \description{
 Simulated data for daily measures of hospital admissions for respiratory causes
-  count and ambient air NO\eqn{_2} concentrations during 10 years.
+count and ambient air NO\eqn{_2} concentrations during 10 years.
 }
 \details{
 This is a synthetic dataset generated with the \code{synthpop} package, based on
-  true data on daily number of hospital admissions for respiratory causes and
-  ambient air NO\eqn{_2} concentrations in the city of Barcelona (Spain) for years
-  2006-2015.
+true data on daily number of hospital admissions for respiratory causes and
+ambient air NO\eqn{_2} concentrations in the city of Barcelona (Spain) for years
+2006-2015.
 }
 \examples{
  # time series:

@@ -3,7 +3,7 @@
 \name{plot.collindlnmlinear}
 \alias{plot.collindlnmlinear}
 \title{Visualizes effects of collinearity in distributed lag model under an
-  hypothetical linear effect pattern.}
+hypothetical linear effect pattern.}
 \usage{
 \method{plot}{collindlnmlinear}(x, lags = NULL, ...)
 }
@@ -18,12 +18,12 @@ will be visualized. Default (\code{NULL}) shows all lags.}
 }
 \value{
 A plot showing a comparison between the results under the fitted
-  model and the results under the hypothetical true effect.
+model and the results under the hypothetical true effect.
 }
 \description{
 Visualize the results from a distributed lag model under an hypothetical
-  linear effect pattern provided by the user, generated using the function
-  \code{\link{collindlnm}}.
+linear effect pattern provided by the user, generated using the function
+\code{\link{collindlnm}}.
 }
 \examples{
 # For detailed examples:

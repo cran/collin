@@ -3,9 +3,9 @@
 \name{rbinomod}
 \alias{rbinomod}
 \title{Internal function to generate random numbers following over-dispersed
-  Bernoulli distribution, based in the BetaBinomial distribution. It
-  currently does not work and standard Bernoulli distribution is actually
-  used instead.}
+Bernoulli distribution, based in the BetaBinomial distribution. It
+currently does not work and standard Bernoulli distribution is actually
+used instead.}
 \usage{
 rbinomod(n, prob, d = 1)
 }
@@ -21,8 +21,8 @@ a vector with the simulated sample.
 }
 \description{
 Internal function to generate random numbers following over-dispersed
-  Bernoulli distribution, based in the BetaBinomial distribution. It
-  currently does not work and standard Bernoulli distribution is actually
-  used instead.
+Bernoulli distribution, based in the BetaBinomial distribution. It
+currently does not work and standard Bernoulli distribution is actually
+used instead.
 }
 \keyword{internal}

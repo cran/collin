@@ -66,7 +66,7 @@ seed).}
 }
 \value{
 A list including the results of the simulations to be passed to the \code{plot}
-  method.
+method.
 }
 \description{
 Simulates results from a distributed lag model under an hypothetical effect
@@ -80,5 +80,5 @@ browseVignettes("collin")
 }
 \seealso{
 \code{\link[dlnm]{crossbasis}}, \code{\link[stats]{glm}},
-  \code{\link[nlme]{lme}}.
+\code{\link[nlme]{lme}}.
 }

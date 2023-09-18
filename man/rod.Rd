@@ -3,8 +3,8 @@
 \name{rod}
 \alias{rod}
 \title{Internal function to generate random numbers following over-dispersed
-  Bernoulli or Poisson distribution. It wraps \code{rpoisod} and
-  \code{rbinomod} functions.}
+Bernoulli or Poisson distribution. It wraps \code{rpoisod} and
+\code{rbinomod} functions.}
 \usage{
 rod(n, mu, d, type = c("binomial", "quasibinomial", "poisson", "quasipoisson"))
 }
@@ -23,7 +23,7 @@ a vector with the simulated sample.
 }
 \description{
 Internal function to generate random numbers following over-dispersed
-  Bernoulli or Poisson distribution. It wraps \code{rpoisod} and
-  \code{rbinomod} functions.
+Bernoulli or Poisson distribution. It wraps \code{rpoisod} and
+\code{rbinomod} functions.
 }
 \keyword{internal}

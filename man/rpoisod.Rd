@@ -3,10 +3,10 @@
 \name{rpoisod}
 \alias{rpoisod}
 \title{Internal function to generate random numbers following over-dispersed
-  Poisson distribution based on simple cheat of using a standard negative
-  binomial, but choosing the scale parameter to give the desired mean vs
-  variance ratio at the given value of the mean.
-  Taken from: https://stat.ethz.ch/pipermail/r-help/2002-June/022425.html}
+Poisson distribution based on simple cheat of using a standard negative
+binomial, but choosing the scale parameter to give the desired mean vs
+variance ratio at the given value of the mean.
+Taken from: https://stat.ethz.ch/pipermail/r-help/2002-June/022425.html}
 \usage{
 rpoisod(n, lambda, d = 1)
 }
@@ -22,9 +22,9 @@ a vector with the simulated sample.
 }
 \description{
 Internal function to generate random numbers following over-dispersed
-  Poisson distribution based on simple cheat of using a standard negative
-  binomial, but choosing the scale parameter to give the desired mean vs
-  variance ratio at the given value of the mean.
-  Taken from: https://stat.ethz.ch/pipermail/r-help/2002-June/022425.html
+Poisson distribution based on simple cheat of using a standard negative
+binomial, but choosing the scale parameter to give the desired mean vs
+variance ratio at the given value of the mean.
+Taken from: https://stat.ethz.ch/pipermail/r-help/2002-June/022425.html
 }
 \keyword{internal}

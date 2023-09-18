@@ -3,7 +3,7 @@
 \name{plot.collindlnmnonlinear}
 \alias{plot.collindlnmnonlinear}
 \title{Visualize effects of collinearity in distributed lag model under an
-  hypothetical non-linear effect pattern.}
+hypothetical non-linear effect pattern.}
 \usage{
 \method{plot}{collindlnmnonlinear}(
   x,
@@ -39,16 +39,16 @@ be shown in the legend.}
 }
 \value{
 A plot showing a comparison between results under the fitted model
-  and the results under the hypothetical true effect, for each of the
-  different values of the variable of interest where effects were explored.
+and the results under the hypothetical true effect, for each of the
+different values of the variable of interest where effects were explored.
 }
 \description{
 Visualize the results from a distributed lag model under an hypothetical
-  non-linear effect pattern provided by the user, generated using the function
-  \code{\link{collindlnm}}. The number of plots shown is equal to the number
-  of values passed by \code{at} in the function \code{\link{collindlnm}}.
-  The way in which these plots are displayed is controlled by the user through
-  the argument \code{show}.
+non-linear effect pattern provided by the user, generated using the function
+\code{\link{collindlnm}}. The number of plots shown is equal to the number
+of values passed by \code{at} in the function \code{\link{collindlnm}}.
+The way in which these plots are displayed is controlled by the user through
+the argument \code{show}.
 }
 \seealso{
 \code{\link{collindlnm}}, \code{\link{plot.collindlnmlinear}}.
