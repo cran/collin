@@ -1,10 +1,16 @@
+## collin 0.0.4:
+
+### Minor changes:
+
+* Add README.
+
+<hr style="border:2px solid gray"> </hr>
+
 ## collin 0.0.3:
 
 ### Minor changes:
 
 * Fix a documentation issue. 
-
-* Add README.
 
 <hr style="border:2px solid gray"> </hr>
 

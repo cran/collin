@@ -1,7 +1,7 @@
 Package: collin
 Title: Visualization the Effects of Collinearity in Distributed Lag
         Models and Other Linear Models
-Version: 0.0.3
+Version: 0.0.4
 Authors@R: 
     c(person(given = "Jose", family = "Barrera-Gomez", role = c("aut", "cre"), email = "jose.barrera@isglobal.org",
                     comment = c(ORCID = "0000-0002-2688-6036")),
@@ -25,9 +25,9 @@ Suggests: knitr, rmarkdown, splines, xtable
 RoxygenNote: 7.2.3
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-09-18 12:05:53 UTC; jbarrera
+Packaged: 2023-09-18 14:18:30 UTC; jbarrera
 Author: Jose Barrera-Gomez [aut, cre] (<https://orcid.org/0000-0002-2688-6036>),
   Xavier Basagana [aut] (<https://orcid.org/0000-0002-8457-1489>)
 Maintainer: Jose Barrera-Gomez <jose.barrera@isglobal.org>
 Repository: CRAN
-Date/Publication: 2023-09-18 13:10:02 UTC
+Date/Publication: 2023-09-19 09:00:06 UTC
